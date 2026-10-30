@@ -1,28 +1,29 @@
-import { expect, test } from '@playwright/test';
-import {
-  addBackpack,
-  enterCheckoutInformation,
-  signIn,
-  startCheckout,
-} from './helpers';
+import { expect, test } from '../fixtures';
+import { checkoutInformation, checkoutRoutes, products } from '../data/checkout-data';
 
 test.describe('SCRUM-101 Checkout', () => {
-  test('Order overview shows products and totals', async ({ page }) => {
-    await signIn(page);
-    await addBackpack(page);
-    await startCheckout(page);
-    await enterCheckoutInformation(page);
+  test('Order overview shows products and totals', async ({
+    page,
+    loggedInInventoryPage: inventoryPage,
+    cartPage,
+    checkoutInformationPage,
+    checkoutOverviewPage,
+  }) => {
+    await inventoryPage.addProductToCart(products.backpack.name);
+    await inventoryPage.openCart();
+    await cartPage.proceedToCheckout();
+    await checkoutInformationPage.submit(checkoutInformation);
 
-    await expect(page).toHaveURL(/checkout-step-two\.html/);
-    await expect(page.getByText('Sauce Labs Backpack', { exact: true })).toBeVisible();
-    await expect(page.getByText('SauceCard #31337')).toBeVisible();
-    await expect(page.getByText('Free Pony Express Delivery!')).toBeVisible();
-    await expect(page.getByText('Item total: $29.99')).toBeVisible();
-    await expect(page.getByText('Tax: $2.40')).toBeVisible();
-    await expect(page.getByText('Total: $32.39')).toBeVisible();
+    await expect(page).toHaveURL(checkoutRoutes.overview);
+    await expect(checkoutOverviewPage.product(products.backpack.name)).toBeVisible();
+    await expect(checkoutOverviewPage.paymentInformation).toBeVisible();
+    await expect(checkoutOverviewPage.shippingInformation).toBeVisible();
+    await expect(checkoutOverviewPage.itemSubtotal).toHaveText('Item total: $29.99');
+    await expect(checkoutOverviewPage.tax).toHaveText('Tax: $2.40');
+    await expect(checkoutOverviewPage.total).toHaveText('Total: $32.39');
 
-    await page.locator('[data-test="cancel"]').click();
-    await expect(page).toHaveURL(/inventory\.html/);
-    await expect(page.locator('.shopping_cart_badge')).toHaveText('1');
+    await checkoutOverviewPage.cancel();
+    await expect(page).toHaveURL(checkoutRoutes.inventory);
+    await expect(inventoryPage.cartBadge).toHaveText('1');
   });
 });

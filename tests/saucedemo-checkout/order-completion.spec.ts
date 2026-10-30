@@ -1,26 +1,28 @@
-import { expect, test } from '@playwright/test';
-import {
-  addBackpack,
-  enterCheckoutInformation,
-  signIn,
-  startCheckout,
-} from './helpers';
+import { expect, test } from '../fixtures';
+import { checkoutInformation, checkoutRoutes, products } from '../data/checkout-data';
 
 test.describe('SCRUM-101 Checkout', () => {
-  test('Successful order completes and clears cart', async ({ page }) => {
-    await signIn(page);
-    await addBackpack(page);
-    await startCheckout(page);
-    await enterCheckoutInformation(page);
+  test('Successful order completes and clears cart', async ({
+    page,
+    loggedInInventoryPage: inventoryPage,
+    cartPage,
+    checkoutInformationPage,
+    checkoutOverviewPage,
+    orderConfirmationPage,
+  }) => {
+    await inventoryPage.addProductToCart(products.backpack.name);
+    await inventoryPage.openCart();
+    await cartPage.proceedToCheckout();
+    await checkoutInformationPage.submit(checkoutInformation);
 
-    await page.locator('[data-test="finish"]').click();
-    await expect(page).toHaveURL(/checkout-complete\.html/);
-    await expect(page.getByRole('heading', { name: 'Thank you for your order!' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Back Home' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Cart, empty' })).toBeVisible();
+    await checkoutOverviewPage.finish();
+    await expect(page).toHaveURL(checkoutRoutes.confirmation);
+    await expect(orderConfirmationPage.confirmationMessage).toBeVisible();
+    await expect(orderConfirmationPage.backHomeButton).toBeVisible();
+    await expect(orderConfirmationPage.emptyCartButton).toBeVisible();
 
-    await page.locator('[data-test="back-to-products"]').click();
-    await expect(page).toHaveURL(/inventory\.html/);
-    await expect(page.getByRole('button', { name: 'Cart, empty' })).toBeVisible();
+    await orderConfirmationPage.returnHome();
+    await expect(page).toHaveURL(checkoutRoutes.inventory);
+    await expect(inventoryPage.cartBadge).toHaveCount(0);
   });
 });

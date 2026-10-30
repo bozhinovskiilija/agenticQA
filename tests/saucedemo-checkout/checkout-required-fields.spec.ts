@@ -1,26 +1,31 @@
-import { expect, test } from '@playwright/test';
-import { addBackpack, signIn, startCheckout } from './helpers';
+import { expect, test } from '../fixtures';
+import { checkoutRoutes, products } from '../data/checkout-data';
 
 test.describe('SCRUM-101 Checkout', () => {
-  test('Checkout requires each information field', async ({ page }) => {
-    await signIn(page);
-    await addBackpack(page);
-    await startCheckout(page);
+  test('Checkout requires each information field', async ({
+    page,
+    loggedInInventoryPage: inventoryPage,
+    cartPage,
+    checkoutInformationPage,
+  }) => {
+    await inventoryPage.addProductToCart(products.backpack.name);
+    await inventoryPage.openCart();
+    await cartPage.proceedToCheckout();
 
-    await expect(page.getByRole('textbox', { name: 'First Name' })).toBeVisible();
-    await expect(page.getByRole('textbox', { name: 'Last Name' })).toBeVisible();
-    await expect(page.getByRole('textbox', { name: 'Zip/Postal Code' })).toBeVisible();
+    await expect(checkoutInformationPage.firstNameInput).toBeVisible();
+    await expect(checkoutInformationPage.lastNameInput).toBeVisible();
+    await expect(checkoutInformationPage.postalCodeInput).toBeVisible();
 
-    await page.locator('[data-test="continue"]').click();
-    await expect(page.getByRole('alert')).toContainText('First Name is required');
+    await checkoutInformationPage.continue();
+    await expect(checkoutInformationPage.errorMessage).toContainText('First Name is required');
 
-    await page.locator('[data-test="firstName"]').fill('First');
-    await page.locator('[data-test="continue"]').click();
-    await expect(page.getByRole('alert')).toContainText('Last Name is required');
+    await checkoutInformationPage.firstNameInput.fill('First');
+    await checkoutInformationPage.continue();
+    await expect(checkoutInformationPage.errorMessage).toContainText('Last Name is required');
 
-    await page.locator('[data-test="lastName"]').fill('Tester');
-    await page.locator('[data-test="continue"]').click();
-    await expect(page.getByRole('alert')).toContainText('Postal Code is required');
-    await expect(page).toHaveURL(/checkout-step-one\.html/);
+    await checkoutInformationPage.lastNameInput.fill('Tester');
+    await checkoutInformationPage.continue();
+    await expect(checkoutInformationPage.errorMessage).toContainText('Postal Code is required');
+    await expect(page).toHaveURL(checkoutRoutes.information);
   });
 });

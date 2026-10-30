@@ -1,18 +1,24 @@
-import { expect, test } from '@playwright/test';
-import { addBackpack, signIn, startCheckout } from './helpers';
+import { expect, test } from '../fixtures';
+import { checkoutRoutes, products } from '../data/checkout-data';
 
 test.describe('SCRUM-101 Checkout', () => {
-  test('Checkout rejects invalid information', async ({ page }) => {
-    await signIn(page);
-    await addBackpack(page);
-    await startCheckout(page);
+  test('Checkout rejects invalid information', async ({
+    page,
+    loggedInInventoryPage: inventoryPage,
+    cartPage,
+    checkoutInformationPage,
+  }) => {
+    await inventoryPage.addProductToCart(products.backpack.name);
+    await inventoryPage.openCart();
+    await cartPage.proceedToCheckout();
 
-    await page.locator('[data-test="firstName"]').fill('!!!');
-    await page.locator('[data-test="lastName"]').fill('###');
-    await page.locator('[data-test="postalCode"]').fill('not-a-postcode');
-    await page.locator('[data-test="continue"]').click();
+    await checkoutInformationPage.submit({
+      firstName: '!!!',
+      lastName: '###',
+      postalCode: 'not-a-postcode',
+    });
 
-    await expect(page).toHaveURL(/checkout-step-one\.html/);
-    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page).toHaveURL(checkoutRoutes.information);
+    await expect(checkoutInformationPage.errorMessage).toBeVisible();
   });
 });
