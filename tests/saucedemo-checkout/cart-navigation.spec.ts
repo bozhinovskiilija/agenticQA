@@ -1,14 +1,17 @@
-import { expect, test } from '@playwright/test';
-import { addBackpack, openCart, signIn } from './helpers';
+import { expect, test } from '../fixtures';
+import { checkoutRoutes, products } from '../data/checkout-data';
 
 test.describe('SCRUM-101 Checkout', () => {
-  test('Cart navigation preserves items', async ({ page }) => {
-    await signIn(page);
-    await addBackpack(page);
-    await openCart(page);
+  test('Cart navigation preserves items', async ({
+    page,
+    loggedInInventoryPage: inventoryPage,
+    cartPage,
+  }) => {
+    await inventoryPage.addProductToCart(products.backpack.name);
+    await inventoryPage.openCart();
 
-    await page.locator('[data-test="continue-shopping"]').click();
-    await expect(page).toHaveURL(/inventory\.html/);
-    await expect(page.locator('.shopping_cart_badge')).toHaveText('1');
+    await cartPage.continueShopping();
+    await expect(page).toHaveURL(checkoutRoutes.inventory);
+    await expect(inventoryPage.cartBadge).toHaveText('1');
   });
 });
