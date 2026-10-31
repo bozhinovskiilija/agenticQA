@@ -1,4 +1,6 @@
 name: Playwright Tests
+permissions:
+  contents: read
 on:
   push:
     branches: [ main, master ]
@@ -17,6 +19,8 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    outputs:
+      report-ready: ${{ steps.generate-allure.outputs.report_ready }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -41,19 +45,23 @@ jobs:
           npm run test:e2e
         fi
     - name: Generate Allure report
+      id: generate-allure
       if: always()
       run: |
+        set -euo pipefail
         if find allure-results -maxdepth 1 -name '*-result.json' -print -quit 2>/dev/null | grep -q .; then
           npm run report:allure
+          echo "report_ready=true" >> "$GITHUB_OUTPUT"
         else
           echo "No Allure test results were generated."
+          echo "report_ready=false" >> "$GITHUB_OUTPUT"
         fi
     - name: Upload Allure report
       id: allure-report
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: allure-report-${{ github.run_number }}
+        name: allure-report-${{ github.run_id }}-${{ github.run_attempt }}
         path: allure-report/
         if-no-files-found: warn
         retention-days: 30
@@ -79,10 +87,53 @@ jobs:
           echo "**Workflow status:** ${TEST_JOB_STATUS}"
           echo
           if [ -n "${ALLURE_REPORT_URL}" ]; then
-            echo "[Download the Allure HTML report](${ALLURE_REPORT_URL})"
+            echo "[Download the Allure report artifact](${ALLURE_REPORT_URL})"
           else
             echo "Allure report artifact was not generated."
           fi
           echo
           echo "[View all workflow artifacts](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-report:
+    needs: test
+    if: >-
+      always() &&
+      needs.test.outputs.report-ready == 'true' &&
+      needs.test.result != 'cancelled' &&
+      ((github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+      actions: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Configure GitHub Pages
+      uses: actions/configure-pages@v5
+    - name: Download Allure report artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: allure-report-${{ github.run_id }}-${{ github.run_attempt }}
+        path: site
+    - name: Upload report for GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: site
+    - name: Deploy Allure report
+      id: deployment
+      uses: actions/deploy-pages@v4
+    - name: Add published URL to workflow summary
+      env:
+        PUBLISHED_REPORT_URL: ${{ steps.deployment.outputs.page_url }}
+      run: |
+        {
+          echo "## Published Allure report"
+          echo
+          echo "[Open the latest Allure report](${PUBLISHED_REPORT_URL})"
+          echo
+          echo "This report is publicly accessible because the repository is public."
         } >> "$GITHUB_STEP_SUMMARY"

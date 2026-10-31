@@ -15,7 +15,9 @@ Set `BASE_URL`, `SAUCEDEMO_USERNAME`, or `SAUCEDEMO_PASSWORD` to override the pu
 
 The smoke command runs the critical order-completion journey marked `@smoke`. The full suite includes the nine checkout scenarios in the test plan; comparison specs are intentionally excluded from normal runs. Supported test scripts clear prior Allure results before execution so each report represents a single run.
 
-GitHub Actions runs the full regression suite for pushes and pull requests. A manual workflow run can select either `smoke` or `regression`; both choices publish the Allure report and test diagnostics and add a direct artifact link to the run summary.
+GitHub Actions runs the full regression suite for pushes and pull requests. A manual workflow run can select either `smoke` or `regression`; both choices publish the Allure report and test diagnostics and add a direct artifact link to the run summary. Pushes to `main` and manual runs also deploy the report to GitHub Pages; the Pages URL appears in the deployment job summary. The latest deployment replaces the previous Pages report, while run-specific artifacts remain available for 30 days.
+
+The GitHub Pages site is public because this repository is public. The expected site URL is `https://bozhinovskiilija.github.io/agenticQA/`. In repository settings, configure **Pages → Build and deployment → Source → GitHub Actions** before the first deployment if it is not already enabled.
 
 ## Structure
 
