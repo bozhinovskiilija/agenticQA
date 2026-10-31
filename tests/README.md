@@ -20,4 +20,4 @@ Set `BASE_URL`, `SAUCEDEMO_USERNAME`, or `SAUCEDEMO_PASSWORD` to override the pu
 
 Use role- or test-id-based locators, Playwright's auto-waiting actions, and web-first `expect` assertions. Avoid fixed sleeps and shared mutable state between tests. Keep defect assertions enabled: failing acceptance tests report application gaps rather than being skipped or weakened.
 
-Playwright traces and failure screenshots are written under the disposable `test-results/playwright/` output folder; the committed execution report and evidence stay outside it.
+Playwright traces, failure screenshots, and videos for failed tests are written under the disposable `test-results/playwright/` output folder. Open the HTML report with `npm run test:e2e:report` to view a failed test's video attachment. Successful test videos are discarded.

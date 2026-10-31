@@ -13,6 +13,7 @@ export default defineConfig({
     testIdAttribute: 'data-test',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
 
   projects: [
