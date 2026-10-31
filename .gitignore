@@ -7,6 +7,8 @@ node_modules/
 /test-results/evidence/*
 !/test-results/evidence/*.png
 /playwright-report/
+/allure-results/
+/allure-report/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/

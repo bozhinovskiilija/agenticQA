@@ -11,6 +11,19 @@ export default defineConfig({
     ['list'],
     ['html', { open: 'never' }],
     ['junit', { outputFile: 'test-results/junit/results.xml' }],
+    [
+      'allure-playwright',
+      {
+        outputFolder: 'allure-results',
+        detail: true,
+        suiteTitle: true,
+        environmentInfo: {
+          Environment: process.env.CI ? 'CI' : 'local',
+          'Base URL': process.env.BASE_URL ?? 'https://www.saucedemo.com',
+          'Node.js': process.version,
+        },
+      },
+    ],
   ],
   outputDir: 'test-results/playwright',
   use: {
