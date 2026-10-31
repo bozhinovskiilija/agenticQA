@@ -1,7 +1,7 @@
 # SCRUM-101 Checkout Test Execution Report
 
 **Application:** https://www.saucedemo.com
-**Execution date:** 2026-10-30
+**Execution date:** 2026-10-31
 **Test account:** `standard_user`
 **Test plan:** [SauceDemo checkout test plan](../specs/saucedemo-checkout-test-plan.md)
 
@@ -19,7 +19,7 @@ The checkout workflow was explored manually and automated with Playwright across
 | Final automated failed | 9 |
 | Blocked | 0 |
 
-The same three acceptance gaps reproduced in all three browser projects: no cart total is shown, invalid checkout values are accepted, and checkout is allowed with an empty cart. The other six cases passed in each browser.
+The same three acceptance gaps reproduced in all three browser projects: no cart total is shown, invalid checkout values are accepted, and checkout is allowed with an empty cart. The other six cases passed in each browser. These figures were confirmed in a fresh run on 2026-10-31; the suite now also emits JUnit results at `test-results/junit/results.xml`.
 
 ## 2. Manual Exploratory Results
 
@@ -43,13 +43,7 @@ The same three acceptance gaps reproduced in all three browser projects: no cart
 
 The generated suite is in `tests/saucedemo-checkout/`. It uses the stable `data-test` selectors observed during exploration and the existing Playwright project configuration.
 
-### Initial Chromium run
-
-| Passed | Failed | Total |
-|---:|---:|---:|
-| 6 | 3 | 9 |
-
-### Final run across configured browsers
+### Fresh run across configured browsers
 
 | Browser project | Passed | Failed | Total |
 |---|---:|---:|---:|
@@ -58,15 +52,15 @@ The generated suite is in `tests/saucedemo-checkout/`. It uses the stable `data-
 | WebKit | 6 | 3 | 9 |
 | **Total** | **18** | **9** | **27** |
 
+The smoke-tagged order-completion journey was also run separately across all three browser projects: **3 passed, 0 failed**.
+
 The failures were consistent across browsers:
 
 1. `Cart review displays items and actions` — expected the two-item cart total `$39.98`; no cart-level total was present.
 2. `Checkout rejects invalid information` — invalid values advanced to `checkout-step-two.html` rather than remaining on the information page with a validation error.
 3. `Checkout is blocked when the cart is empty` — checkout advanced to `checkout-step-one.html` after the only item was removed.
 
-### Healing activities
-
-The failing assertions and live browser behavior were reviewed. These are product/acceptance-criteria mismatches, not selector or timing defects, so the tests were not weakened or marked skipped. No application source is present in this workspace to fix the SauceDemo behavior. The configured healer agent could not be launched because its declared model, Claude Sonnet 4.6, is unavailable in this session. The planner agent encountered the same model-availability limitation; the plan and tests were completed directly with the available Playwright MCP and local Playwright runner.
+Failed assertions remain enabled because they represent observed acceptance-criteria gaps, not selector or timing defects. No application source is present in this workspace to fix the SauceDemo behavior. Failed tests produced screenshots, videos, and traces under `test-results/playwright/`.
 
 ## 4. Defects Log
 
@@ -123,8 +117,8 @@ The core happy path works in all three configured browser projects, including re
 The tests were run from the workspace with:
 
 ```text
-npx playwright test tests/saucedemo-checkout --project=chromium --reporter=list
-npx playwright test tests/saucedemo-checkout --reporter=list
+npm run typecheck
+npm run test:e2e:checkout
 ```
 
-The first command produced the initial Chromium result; the second ran all configured browser projects.
+The full run executed 27 cases (9 scenarios × 3 browser projects): 18 passed and 9 failed. Each browser had the same 6-pass / 3-fail result. The failures match the three application gaps listed above. The smoke-tagged order-completion test is available through `npm run test:smoke`.

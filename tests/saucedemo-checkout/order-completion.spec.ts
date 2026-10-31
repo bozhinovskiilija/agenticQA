@@ -2,7 +2,7 @@ import { expect, test } from '../fixtures';
 import { checkoutInformation, checkoutRoutes, products } from '../data/checkout-data';
 
 test.describe('SCRUM-101 Checkout', () => {
-  test('Successful order completes and clears cart', async ({
+  test('Successful order completes and clears cart @smoke', async ({
     page,
     loggedInInventoryPage: inventoryPage,
     cartPage,
